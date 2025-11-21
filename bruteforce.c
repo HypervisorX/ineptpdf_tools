@@ -151,8 +151,10 @@ const char* extract_stream(const char* buffer) {
     return NULL;
 }
 
-int increment_password(char *str)
+int increment_password(char *str, int lowercase)
 {
+    // Set int lowercase to 0 to only search 0-9, A-Z (uppercase only)
+    // Otherwise the keyspace will include a-z as well
     int index, carry;
     int carry_count = 0;
     for(index = strlen(str)-1;index>=0;--index){
@@ -163,6 +165,13 @@ int increment_password(char *str)
             }
             str[index] = '0';
         } else if(str[index] == '9'){
+            carry = 0;
+            if(lowercase) {
+                str[index] = 'a';
+            } else {
+                str[index] = 'A';
+            }
+        } else if(str[index] == 'z'){
             carry = 0;
             str[index] = 'A';
         } else {
@@ -240,6 +249,8 @@ int main(int argc, char *argv[]) {
     decrypted = malloc(bufferLen + 1);
     unzippedLen = CHUNK;
     unzipped = malloc(CHUNK);
+    // set lowercase to 0 to only search 0-9, A-Z (uppercase only)
+    int lowercase = 1;
     do {
         decrypt(password, objid, 0, buffer, bufferLen, decrypted);
         ret = unzip(decrypted, bufferLen, unzipped, &unzippedLen);
@@ -249,7 +260,7 @@ int main(int argc, char *argv[]) {
             for(size_t i = 0; i < unzippedLen; i++)
                 printf("%c", unzipped[i]);
         }
-        if (increment_password(password)) {
+        if (increment_password(password, lowercase)) {
             printf("Password not found, keyspace insufficient?\n");
             break;
         }
