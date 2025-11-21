@@ -5,8 +5,9 @@
 # - hashlib
 
 
-from ppdfminer.pdfparser import PDFParser
-from ppdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdftypes import PDFObjRef, dict_value, PDFTypeError
 from Crypto.Cipher import ARC4
 import sys
 import base64
@@ -15,6 +16,12 @@ import struct
 import zlib
 from pprint import pprint
 import argparse
+
+# begin added functions from ineptpdf.py
+
+STRICT = 0
+
+# end added functions from ineptpdf.py
 
 def genkey_fileopeninfo(data):
         key = struct.pack('>LB', 0xa4da49de, 0x82)
@@ -53,7 +60,9 @@ fp = open(args.filename, "rb")
 parser = PDFParser(fp)
 doc = PDFDocument(parser)
 if args.info:
+    # An array of two byte-strings constituting a file identifier for the file. If there is an Encrypt entry this array and the two byte-strings shall be direct objects and shall be unencrypted
     pprint(doc.encryption)
+    pprint(dict_value(doc.xrefs[0].trailer['Encrypt']))
     pprint(genkey_fileopeninfo(base64.b64decode(doc.encryption[1]['INFO'])).split(b';'))
 
 if args.decode_object is not None and args.password is not None:
